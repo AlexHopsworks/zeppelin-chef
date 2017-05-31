@@ -9,6 +9,8 @@
 
 include_recipe "java"
 
+setup_aws()
+
 group node.zeppelin.group do
   action :create
   not_if "getent group #{node.zeppelin.group}"
