@@ -33,7 +33,7 @@ end
 directory node.zeppelin.dir do
   owner node.zeppelin.user
   group node.hops.group
-  mode "0775"
+  mode "0750"
   action :create
   not_if { File.directory?("#{node.zeppelin.dir}") }
 end
@@ -41,7 +41,7 @@ end
 
 package_url = "#{node.zeppelin.url}"
 base_package_filename = File.basename(package_url)
-cached_package_filename = "/tmp/#{base_package_filename}"
+cached_package_filename = "#{Chef::Config[:file_cache_path]}/#{base_package_filename}"
 
 remote_file cached_package_filename do
   source package_url
@@ -57,15 +57,15 @@ bash 'extract-zeppelin' do
         group node.zeppelin.group
         code <<-EOH
                 set -e
-                cd /tmp
-                tar -xf #{cached_package_filename} -C /tmp
-                mv /tmp/zeppelin-#{node.zeppelin.version} #{node.zeppelin.dir}
+                cd #{Chef::Config[:file_cache_path]}
+                tar -xf #{cached_package_filename} -C #{Chef::Config[:file_cache_path]}
+                mv #{Chef::Config[:file_cache_path]}/zeppelin-#{node.zeppelin.version} #{node.zeppelin.dir}
                 mkdir -p #{node.zeppelin.home}/run
                 wget http://snurran.sics.se/hops/zeppelin-interpreter.tgz
                 tar -xf zeppelin-interpreter.tgz
                 mv zeppelin-interpreter #{node.zeppelin.home}
-                chown -R #{node.zeppelin.user}:#{node.zeppelin.group} #{node.zeppelin.home}
-                chmod 750 #{node.zeppelin.home}
+                chown -R #{node.zeppelin.user}:#{node.hops.group} #{node.zeppelin.home}
+                chmod 770 #{node.zeppelin.home}
                 touch #{zeppelin_down}
         EOH
      not_if { ::File.exists?( "#{zeppelin_down}" ) }
